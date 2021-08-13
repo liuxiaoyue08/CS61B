@@ -113,6 +113,39 @@ public class Model extends Observable {
         // TODO: Modify this.board (and perhaps this.score) to account
         // for the tilt to the Side SIDE. If the board changed, set the
         // changed local variable to true.
+        if(side!=Side.NORTH){
+            board.setViewingPerspective(side);
+        }
+        for(int i = 0; i < size(); i++){
+            boolean[] merged = new boolean[size()];// set indicator to indicate if the tile has been merged or not
+            for(int j = size()-1; j >= 0; j--){
+                Tile curr = tile(i, j);  //Initiate instance of tile
+                if(curr == null){
+                    continue;            // ignore empty tiles since they don't move
+                }
+                int pointer = j + 1;     // Look at the tile above
+                while(pointer < size() - 1 && tile(i, pointer) == null){
+                    pointer ++;           // look for the next non-empty tile
+                }
+                if(pointer >= size()){
+                    continue;             // if out of range(no tile below), look into next row of tile
+                }
+                if(tile(i, pointer) == null){
+                    board.move(i, pointer, tile(i,j));          // move the tile to empty place
+                } else if(tile(i, pointer).value() == curr.value() && !merged[pointer]){
+                    board.move(i, pointer, tile(i, j));         // merge if the next non-empty tile has save value
+                    score += curr.value()*2;
+                    merged[pointer] = true;                     // label it as merged so it won't be merged again
+                } else if (pointer == j+1){
+                    continue;                                   // next tile is not able to merge and no space to move
+                } else {
+                    board.move(i, pointer - 1, tile(i, j)); // move to the position next to the non-empty tile
+                }
+                changed = true;
+            }
+        }
+        board.setViewingPerspective(Side.NORTH);
+
 
         checkGameOver();
         if (changed) {
@@ -138,6 +171,15 @@ public class Model extends Observable {
      * */
     public static boolean emptySpaceExists(Board b) {
         // TODO: Fill in this function.
+        int boardSize = b.size();
+        for(int i = 0; i < boardSize; i++){
+            for(int j =0; j< boardSize; j++){
+                if(b.tile(i, j) == null)
+                {
+                    return true;
+                }
+            }
+        }
         return false;
     }
 
@@ -148,6 +190,16 @@ public class Model extends Observable {
      */
     public static boolean maxTileExists(Board b) {
         // TODO: Fill in this function.
+        int boardSize = b.size();
+        for(int i = 0; i < boardSize; i++){
+            for(int j =0; j< boardSize; j++){
+
+                if(b.tile(i,j)!=null && b.tile(i, j).value() == MAX_PIECE)
+                {
+                    return true;
+                }
+            }
+        }
         return false;
     }
 
@@ -159,7 +211,28 @@ public class Model extends Observable {
      */
     public static boolean atLeastOneMoveExists(Board b) {
         // TODO: Fill in this function.
-        return false;
+        if(emptySpaceExists(b)) {
+            return true;
+        } else {
+            for(int i = 0; i < b.size(); i++)
+            {
+                for(int j = 0; j < b.size(); j++)
+                {
+                    if (j<b.size()-1){
+                        if(b.tile(i,j).value()==b.tile(i,j+1).value()){
+                            return true;
+                        }
+                    }
+                    if(i<b.size()-1){
+                        if(b.tile(i,j).value()== b.tile(i+1,j).value()){
+                            return true;
+                        }
+                    }
+
+                }
+            }
+            return false;
+        }
     }
 
 
